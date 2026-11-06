@@ -47,6 +47,7 @@ const FACTORY = {
 };
 const LS_PRESETS = "lofiStudio.presets.v1";
 const LS_LAST = "lofiStudio.last.v1";
+const LS_TAKE = "lofiStudio.take.v1";
 const MAX_TAKES = 8;
 
 const $ = (id) => document.getElementById(id);
@@ -57,7 +58,8 @@ const els = {
   key: $("key"), scale: $("scale"), layers: $("layers"), seed: $("seed"), dice: $("dice"), seedClear: $("seedClear"),
   generate: $("generate"), faders: $("faders"), instGrid: $("instGrid"), instCount: $("instCount"),
   outFile: $("outFile"), report: $("report"), download: $("download"), downloadRecipe: $("downloadRecipe"),
-  copyReport: $("copyReport"), status: $("status"), recentList: $("recentList"), live: $("live")
+  copyReport: $("copyReport"), status: $("status"), recentList: $("recentList"), live: $("live"),
+  playBtn: $("playBtn")
 };
 
 let boot = { defaults: DEFAULTS, factory: FACTORY, user: {} };
@@ -86,6 +88,18 @@ function loadLastSettings() {
 }
 function saveLastSettings(s) {
   try { localStorage.setItem(LS_LAST, JSON.stringify(s)); } catch {}
+}
+function saveLastTake(res) {
+  try {
+    if (!res || !res.midi_b64) return;
+    localStorage.setItem(LS_TAKE, JSON.stringify({
+      name: res.file_name, midi_b64: res.midi_b64, report: res.report || "",
+      recipe: res.recipe || null, seed: res.seed || "", ok: !!res.ok
+    }));
+  } catch {}
+}
+function loadLastTake() {
+  try { return JSON.parse(localStorage.getItem(LS_TAKE) || "null"); } catch { return null; }
 }
 
 // ---------------------------------------------------------------- remote generation
@@ -378,6 +392,7 @@ async function setTake(res, opts = {}) {
   if (res.ok && bytes) await window.LofiPlayer.setBytes(bytes, take.name);
   else window.LofiPlayer.clear();
   if (!opts.noRecent) pushTake(take);
+  if (res.ok) saveLastTake(res);
   saveLastSettings(collect());
   return take;
 }
@@ -529,6 +544,23 @@ function bind() {
   els.randomBtn.addEventListener("click", randomize);
   els.resetBtn.addEventListener("click", reset);
   els.generate.addEventListener("click", generate);
+  els.playBtn.addEventListener("click", async () => {
+    if (!window.LofiPlayer) return;
+    if (!window.LofiPlayer.getState().ready) {
+      if (busy) return;
+      await generate();
+      if (window.LofiPlayer.getState().ready) window.LofiPlayer.play();
+      return;
+    }
+    if (window.LofiPlayer.isPlaying()) window.LofiPlayer.stop();
+    else {
+      window.LofiPlayer.play();
+      setTimeout(() => {
+        const s = window.LofiPlayer.getState();
+        if (s.playing && s.ctxState && s.ctxState !== "running") setStatus("Audio is blocked — press Play again", "bad");
+      }, 300);
+    }
+  });
   els.download.addEventListener("click", () => {
     if (!lastTake || !lastTake.bytes) return;
     downloadData(lastTake.name, lastTake.bytes, "audio/midi");
@@ -558,7 +590,23 @@ function init() {
   render();
   buildTakes();
   setConn(true, "ready");
-  els.report.textContent = "Set the faders, then press GENERATE. Everything runs in your browser; only the MIDI render uses the Netlify Function.";
+  window.LofiPlayer.clear();
+  const saved = loadLastTake();
+  if (saved && saved.ok && saved.midi_b64) {
+    const bytes = b64ToBytes(saved.midi_b64);
+    const t = {
+      name: saved.name, bytes, recipe: saved.recipe || null, seed: saved.seed || "",
+      ok: true, report: saved.report || "", error: "",
+      verify: (saved.report || "").split("\n").find((l) => l.startsWith("Verify:")) || ""
+    };
+    showTake(t);
+    pushTake(t);
+    window.LofiPlayer.setBytes(bytes, t.name);
+    setStatus("loaded last render", "good");
+  } else {
+    els.report.textContent = "Preparing a first beat…";
+    setTimeout(() => { if (!lastTake && !busy) generate(); }, 250);
+  }
 }
 
 document.addEventListener("keydown", (e) => {

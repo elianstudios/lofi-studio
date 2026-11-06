@@ -240,7 +240,9 @@
       els.btn.textContent = "■ Stop"; els.btn.classList.add("playing");
       els.bar.classList.add("playing");
       paint(off);
-      ctx.resume().catch(() => {});
+      ctx.resume().then(() => {
+        if (ctx && ctx.state !== "running") status("Audio is blocked by the browser — press Play again", "bad");
+      }).catch(() => {});
       timer = setInterval(tick, 50);
       tick();
       status("preview playing", "good");
@@ -254,7 +256,7 @@
     if (timer) { clearInterval(timer); timer = null; }
     if (ctx) { try { ctx.close(); } catch {} ctx = null; master = null; noiseBuf = null; }
     playing = false; next = 0; startAt = 0;
-    els.btn.textContent = "▶ Play";
+    els.btn.textContent = ready ? "▶ Play" : "▶ Generate & Play";
     els.btn.classList.remove("playing");
     els.bar.classList.remove("playing");
     paint(0);
@@ -264,7 +266,7 @@
     if (playing) stop();
     file = name || "";
     ready = false; notes = []; duration = 0;
-    els.btn.disabled = true; els.btn.textContent = "▶ Play"; paint(0);
+    els.btn.disabled = false; els.btn.textContent = "▶ Generate & Play"; paint(0);
     if (!bytes) return;
     try {
       const buf = bytes instanceof ArrayBuffer ? bytes
@@ -272,7 +274,7 @@
       const p = parseMidi(buf);
       if (!p.notes.length) throw new Error("this render has no notes");
       notes = p.notes; duration = p.duration; ready = true;
-      els.btn.disabled = false;
+      els.btn.disabled = false; els.btn.textContent = "▶ Play";
       els.time.textContent = "0:00 / " + mmss(duration);
     } catch (e) {
       els.time.textContent = "0:00 / 0:00";
@@ -283,10 +285,9 @@
   function clear() {
     if (playing) stop();
     file = ""; notes = []; duration = 0; ready = false;
-    els.btn.disabled = true; els.btn.textContent = "▶ Play"; paint(0);
+    els.btn.disabled = false; els.btn.textContent = "▶ Generate & Play"; paint(0);
   }
 
-  els.btn.addEventListener("click", () => (playing ? stop() : play()));
   els.loop.addEventListener("change", () => { loopOn = els.loop.checked; });
   els.vol.addEventListener("input", () => {
     volume = Math.max(0, Math.min(1, Number(els.vol.value) / 100));
@@ -296,7 +297,7 @@
   window.LofiPlayer = {
     setBytes, clear, play, playAt: play, stop,
     isPlaying: () => playing,
-    getState: () => ({ playing, duration, notes: notes.length, elapsed: ctx ? Math.max(0, ctx.currentTime - startAt) : 0, file, ready }),
+    getState: () => ({ playing, duration, notes: notes.length, elapsed: ctx ? Math.max(0, ctx.currentTime - startAt) : 0, file, ready, ctxState: ctx ? ctx.state : null }),
     _parse: parseMidi
   };
 })();

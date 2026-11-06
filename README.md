@@ -22,6 +22,9 @@ per-instrument toggles, factory/user presets, real-time preview and MIDI downloa
 The function has no database, no keys and writes only to `/tmp`; the MIDI is returned as base64
 and downloaded by the browser. Typical render time is well under a second.
 
+On a first visit the page renders one beat automatically so **Play** is ready; after that the last
+render is restored from `localStorage` (no extra function call on reload).
+
 ## Run locally
 
 ```bash
@@ -41,6 +44,8 @@ local page behaves exactly like the deployed one.
   faders + instrument selection + seed in `localStorage`.
 - **SEED:** same seed + same settings = the same file; empty = a new variation per render.
 - **LIVE:** while playing, moving a fader re-renders and continues from the same relative position.
+- **Play** is always active: if nothing has been rendered yet it generates a beat and plays it;
+  the last render is kept in `localStorage`, so a reload has Play ready.
 - **Download .mid / Recipe / Copy report.**
 
 ## Files
