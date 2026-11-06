@@ -1,0 +1,10 @@
+{
+  "name": "lofi-studio",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Lofi Studio — faders, presets, playback and MIDI generation for the Lofi Electroacoustic Beats generator.",
+  "scripts": {
+    "dev": "node dev.js",
+    "start": "node dev.js"
+  }
+}

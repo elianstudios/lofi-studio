@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lofi Studio — Andorius</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div class="grain"></div>
+<header class="top">
+  <div class="brand">
+    <div class="logo">◉</div>
+    <div>
+      <h1>LOFI <span>STUDIO</span></h1>
+      <p>electroacoustic beats · 10 instruments · live playback</p>
+    </div>
+  </div>
+  <div class="conn" id="conn"><i></i><span>connecting</span></div>
+</header>
+
+<main>
+  <section class="panel bar">
+    <div class="presetWrap">
+      <label class="cap">PRESET</label>
+      <select id="presetSelect" class="select wide"></select>
+      <button id="saveBtn" class="btn">Save as…</button>
+      <button id="delBtn" class="btn ghost" title="Delete this user preset">Delete</button>
+    </div>
+    <div class="saveRow hidden" id="saveRow">
+      <input id="presetName" class="text" maxlength="60" placeholder="preset name">
+      <button id="saveOk" class="btn accent">Save</button>
+      <button id="saveCancel" class="btn ghost">Cancel</button>
+    </div>
+    <div class="barRight">
+      <button id="randomBtn" class="btn">🎲 Randomize</button>
+      <button id="resetBtn" class="btn ghost">Reset</button>
+    </div>
+  </section>
+
+  <section class="panel transport">
+    <div class="field">
+      <label class="cap">BARS</label>
+      <div class="seg" id="barsSeg">
+        <button data-bars="4">4</button>
+        <button data-bars="8">8</button>
+        <button data-bars="16">16</button>
+        <button data-bars="32">32</button>
+      </div>
+    </div>
+    <div class="field">
+      <label class="cap">KEY</label>
+      <select id="key" class="select"></select>
+    </div>
+    <div class="field">
+      <label class="cap">SCALE</label>
+      <select id="scale" class="select"></select>
+    </div>
+    <div class="field">
+      <label class="cap">GROUP</label>
+      <select id="layers" class="select" title="Quick group; fine-tune below with the instrument checkboxes"></select>
+    </div>
+    <div class="field seed">
+      <label class="cap">SEED</label>
+      <div class="seedRow">
+        <input id="seed" class="text" inputmode="numeric" placeholder="random" autocomplete="off">
+        <button id="dice" class="btn small" title="New random seed">🎲</button>
+        <button id="seedClear" class="btn small ghost" title="Random seed each run">✕</button>
+      </div>
+    </div>
+    <button id="generate" class="go">GENERATE <span>▶</span></button>
+  </section>
+
+  <section class="panel insts">
+    <div class="instHead">
+      <span class="cap">INSTRUMENTS</span>
+      <span class="instHint">check / uncheck · saved inside presets</span>
+      <span id="instCount" class="instCount">10/10</span>
+    </div>
+    <div class="instGrid" id="instGrid"></div>
+  </section>
+
+  <section class="panel faders" id="faders"></section>
+
+  <section class="panel output">
+    <div class="outHead">
+      <span class="cap">OUTPUT</span>
+      <span id="outFile" class="outFile">nothing generated yet</span>
+    </div>
+    <pre id="report">Set the faders, then press GENERATE.</pre>
+    <div class="outActions">
+      <button id="download" class="btn" disabled>Download .mid</button>
+      <button id="downloadRecipe" class="btn" disabled>Recipe</button>
+      <button id="copyReport" class="btn ghost" disabled>Copy report</button>
+      <span id="status" class="status"></span>
+    </div>
+    <div class="playbar" id="playbar">
+      <button id="playBtn" class="btn play" disabled>▶ Play</button>
+      <div class="track" id="track"><div id="progressFill"></div></div>
+      <span id="time" class="time">0:00 / 0:00</span>
+      <label class="loopBox" title="Loop the preview"><input type="checkbox" id="loop"> loop</label>
+      <label class="loopBox liveBox" title="Re-render and keep playing when a fader changes"><input type="checkbox" id="live" checked> live</label>
+      <input id="volume" class="vol" type="range" min="0" max="100" value="80" aria-label="Volume" title="Volume">
+    </div>
+    <div class="recent">
+      <span class="cap">RECENT</span>
+      <ul id="recentList"></ul>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <span>generator <b>v5</b></span>
+  <span>10 instruments + tempo map · format 1 · 960 PPQ</span>
+  <span>runs in your browser · one Netlify Function renders the MIDI</span>
+</footer>
+
+<script src="/player.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>
